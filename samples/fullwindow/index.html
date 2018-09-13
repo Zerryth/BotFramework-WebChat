@@ -5,6 +5,8 @@
   2. Start a web server: "npm run start"
   3. Aim your browser at "http://localhost:8000/samples?[parameters as listed below]"
 
+  WERE ARE AT http://localhost:8000/samples/fullwindow/?s=[DirectLineSecretHere]
+
   For ease of testing, several parameters can be set in the query string:
     * s = Direct Line secret, or
     * t = Direct Line token (obtained by calling Direct Line's Generate Token)
@@ -19,6 +21,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Bot Chat</title>
 
+    <link href="https://cdn.botframework.com/botframework-webchat/latest/botchat.css" rel="stylesheet" />
+
     <link href="../../botchat.css" rel="stylesheet" />
     <link href="../../botchat-fullwindow.css" rel="stylesheet" />
 
@@ -32,38 +36,70 @@
     </style>
   </head>
   <body>
-    <div id="BotChatGoesHere"></div>
-    <script src="../../botchat.js"></script>
+    <div id="BotChatGoesHere">
+      <iframe src='https://webchat.botframework.com/embed/AshleyHoNodeV3Echo?s=[DirectLineSecretHere]'></iframe>
+    </div>
+    <!-- <script src="../../botchat.js"></script> -->
+    <script src="https://cdn.botframework.com/botframework-webchat/latest/botchat.js"></script>
+
     <script>
       const params = BotChat.queryParams(location.search);
 
-      const user = {
-        id: params['userid'] || 'userid',
-        name: params['username'] || 'username'
-      };
+      // const user = {
+      //   id: params['userid'] || 'userid',
+      //   name: params['username'] || 'username'
+      // };
 
-      const bot = {
-        id: params['botid'] || 'botid',
-        name: params['botname'] || 'botname'
-      };
+      var user = {
+            id: 'user-id',
+            name: 'user name'
+        };
+
+      // const bot = {
+      //   id: params['botid'] || 'botid',
+      //   name: params['botname'] || 'botname'
+      // };
+
+      var botConnection = new BotChat.DirectLine({
+            token: '[DirectLineSecretHere]',
+            user: user
+        });
 
       window['botchatDebug'] = params['debug'] && params['debug'] === 'true';
+      
+      // BotChat.App({
+      //   bot: bot,
+      //   locale: params['locale'],
+      //   resize: 'window',
+      //   // sendTyping: true,    // defaults to false. set to true to send 'typing' activities to bot (and other users) when user is typing
+      //   user: user,
+      //   // locale: 'es-es', // override locale to Spanish
+
+      //   directLine: {
+      //     secret: params['s'],
+      //     token: params['t'],
+      //     domain: params['domain'],
+      //     webSocket: params['webSocket'] && params['webSocket'] === 'true' // defaults to true
+      //   }
+      // }, document.getElementById('BotChatGoesHere'));
 
       BotChat.App({
-        bot: bot,
-        locale: params['locale'],
-        resize: 'window',
-        // sendTyping: true,    // defaults to false. set to true to send 'typing' activities to bot (and other users) when user is typing
-        user: user,
-        // locale: 'es-es', // override locale to Spanish
-
-        directLine: {
-          secret: params['s'],
-          token: params['t'],
-          domain: params['domain'],
-          webSocket: params['webSocket'] && params['webSocket'] === 'true' // defaults to true
-        }
-      }, document.getElementById('BotChatGoesHere'));
+            user: user,
+            botConnection: botConnection,
+            bot: { id: 'bot-id', name: 'bot name' },
+            resize: 'detect'
+        }, document.getElementById("BotChatGoesHere"));
+      
+      botConnection
+          .postActivity({
+              from: user,
+              name: 'requestWelcomeDialog',
+              type: 'event',
+              value: ''
+          })
+          .subscribe(function (id) {
+              console.log('"trigger requestWelcomeDialog" sent');
+          });
     </script>
   </body>
 </html>
